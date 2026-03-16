@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.js.map
+.DS_Store
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.env
+.env.*
+coverage/
+.vitest/
