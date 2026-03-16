@@ -57,4 +57,55 @@ export function registerEntityTools(server: McpServer, db: Database.Database): v
       }
     }
   );
+
+  server.tool(
+    'entity_link_entity',
+    'Create a typed relationship between two entities — "Roman owns 29% of TimeHUB", "Vika studies Applied Informatics", "TimeHUB located_in Bali". Builds a knowledge graph of how things connect.',
+    {
+      source_entity_id: z.string().describe('Source entity ID (the subject)'),
+      target_entity_id: z.string().describe('Target entity ID (the object)'),
+      relation: z.string().describe('Relationship type (e.g. owns, works_at, located_in, studies, part_of)'),
+      properties: z.record(z.string(), z.string()).optional().describe('Additional properties (e.g. {"share": "29%"})'),
+    },
+    async (params) => {
+      try {
+        const link = service.linkEntity(params);
+        return jsonContent({ success: true, ...link });
+      } catch (error) {
+        return textContent(`Link error: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  );
+
+  server.tool(
+    'entity_timeline',
+    'Add a chronological event to an entity — "TimeHUB: founded 2024-01", "revenue drop 2026-01", "restructuring discussion 2026-03". Builds a living history for any entity.',
+    {
+      entity_id: z.string().describe('Entity ID'),
+      event: z.string().describe('Event description'),
+      event_date: z.string().describe('When it happened (ISO date or approximate like "2026-01")'),
+      metadata: z.record(z.string(), z.unknown()).optional().describe('Additional event data'),
+    },
+    async (params) => {
+      try {
+        const evt = service.addTimelineEvent(params);
+        return jsonContent(evt);
+      } catch (error) {
+        return textContent(`Timeline error: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  );
+
+  server.tool(
+    'entity_get_full',
+    'Get a complete picture of an entity — its properties, all linked memories, relationships to other entities, and chronological timeline. One call gives you everything known about a person, project, or concept.',
+    {
+      entity_id: z.string().describe('Entity ID'),
+    },
+    async ({ entity_id }) => {
+      const full = service.getFull(entity_id);
+      if (!full) return textContent(`Entity not found: ${entity_id}`);
+      return jsonContent(full);
+    }
+  );
 }
