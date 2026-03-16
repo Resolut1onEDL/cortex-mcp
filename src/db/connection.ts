@@ -3,6 +3,7 @@ import { mkdirSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { homedir } from 'os';
 import { up as migration001 } from './migrations/001-init.js';
+import { up as migration002 } from './migrations/002-scheduler.js';
 
 let db: Database.Database | null = null;
 
@@ -43,6 +44,7 @@ function runMigrations(database: Database.Database): void {
 
   const migrations = [
     { id: 1, name: '001-init', fn: migration001 },
+    { id: 2, name: '002-scheduler', fn: migration002 },
   ];
 
   const applied = new Set(

@@ -11,7 +11,7 @@ export function registerEntityTools(server: McpServer, db: Database.Database): v
 
   server.tool(
     'entity_store',
-    'Create a new entity (person, project, organization, tool, or concept)',
+    'Register a person, project, organization, tool, or concept that appears across multiple conversations. Entities connect related memories and build a knowledge graph over time.',
     {
       name: z.string().describe('Entity name'),
       type: z.enum(ENTITY_TYPES).describe('Entity type'),
@@ -27,7 +27,7 @@ export function registerEntityTools(server: McpServer, db: Database.Database): v
 
   server.tool(
     'entity_search',
-    'Search entities by name or description',
+    'Look up known people, projects, tools, or concepts. Use this to check what is already known about someone or something before making assumptions.',
     {
       query: z.string().describe('Search query (matches name and description)'),
       type: z.enum(ENTITY_TYPES).optional().describe('Filter by entity type'),
@@ -42,7 +42,7 @@ export function registerEntityTools(server: McpServer, db: Database.Database): v
 
   server.tool(
     'entity_link_memory',
-    'Link an entity to a memory with a relationship type',
+    'Connect an entity to a related memory — e.g., link a person to their feedback, or a project to a decision made about it.',
     {
       entity_id: z.string().describe('Entity ID'),
       memory_id: z.string().describe('Memory ID'),

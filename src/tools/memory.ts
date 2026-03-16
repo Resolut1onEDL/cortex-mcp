@@ -11,7 +11,7 @@ export function registerMemoryTools(server: McpServer, db: Database.Database): v
 
   server.tool(
     'memory_store',
-    'Store a new memory with type, tags, and project scope',
+    'Save important information that should persist across sessions — user preferences, project decisions, learned patterns, feedback, or anything worth remembering later. Use this when you encounter information that would be lost when the conversation ends.',
     {
       content: z.string().describe('The memory content to store'),
       type: z.enum(MEMORY_TYPES).default('note').describe('Memory type'),
@@ -27,7 +27,7 @@ export function registerMemoryTools(server: McpServer, db: Database.Database): v
 
   server.tool(
     'memory_search',
-    'Full-text search across memories with optional filters',
+    'Recall relevant memories before answering questions or making decisions. Search by keywords, topics, or context. Use this to check if you already know something about the user, project, or topic before starting work.',
     {
       query: z.string().describe('Search query (supports FTS5 syntax)'),
       project: z.string().optional().describe('Filter by project scope'),
@@ -47,7 +47,7 @@ export function registerMemoryTools(server: McpServer, db: Database.Database): v
 
   server.tool(
     'memory_list',
-    'List memories with pagination and optional filters',
+    'Browse all stored memories, optionally filtered by project or type. Use to review what is known about a project or to find memories when search terms are unclear.',
     {
       project: z.string().optional().describe('Filter by project scope'),
       type: z.enum(MEMORY_TYPES).optional().describe('Filter by memory type'),
@@ -62,7 +62,7 @@ export function registerMemoryTools(server: McpServer, db: Database.Database): v
 
   server.tool(
     'memory_get',
-    'Get a single memory by its ID',
+    'Retrieve a specific memory by ID when you already have the reference.',
     {
       id: z.string().describe('Memory ID'),
     },
@@ -77,7 +77,7 @@ export function registerMemoryTools(server: McpServer, db: Database.Database): v
 
   server.tool(
     'memory_update',
-    'Update an existing memory',
+    'Correct or enrich an existing memory — update its content, reclassify its type, or refine its tags when you learn new information.',
     {
       id: z.string().describe('Memory ID to update'),
       content: z.string().optional().describe('New content'),
@@ -96,7 +96,7 @@ export function registerMemoryTools(server: McpServer, db: Database.Database): v
 
   server.tool(
     'memory_delete',
-    'Delete a memory by its ID',
+    'Remove a memory that is outdated, incorrect, or no longer relevant.',
     {
       id: z.string().describe('Memory ID to delete'),
     },

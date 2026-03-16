@@ -3,6 +3,7 @@ import { getDb } from './db/connection.js';
 import { registerMemoryTools } from './tools/memory.js';
 import { registerEntityTools } from './tools/entity.js';
 import { registerContextTools } from './tools/context.js';
+import { registerSchedulerTools } from './tools/scheduler.js';
 
 export function createServer(dbPath?: string): McpServer {
   const server = new McpServer({
@@ -15,6 +16,7 @@ export function createServer(dbPath?: string): McpServer {
   registerMemoryTools(server, db);
   registerEntityTools(server, db);
   registerContextTools(server, db);
+  registerSchedulerTools(server, db);
 
   return server;
 }

@@ -10,7 +10,7 @@ export function registerContextTools(server: McpServer, db: Database.Database): 
 
   server.tool(
     'context_set',
-    'Set or update a project context value (key-value pair)',
+    'Store structured project context (tech stack, goals, team, conventions) that should be loaded at the start of every session working on this project.',
     {
       project: z.string().describe('Project name'),
       key: z.string().describe('Context key (e.g. tech_stack, goals, team)'),
@@ -25,7 +25,7 @@ export function registerContextTools(server: McpServer, db: Database.Database): 
 
   server.tool(
     'context_get',
-    'Get project context — one key or all keys for a project',
+    'Load project context to understand the current project before starting work. Returns tech stack, goals, conventions, and other structured information.',
     {
       project: z.string().describe('Project name'),
       key: z.string().optional().describe('Specific key, or omit to get all context'),
@@ -41,7 +41,7 @@ export function registerContextTools(server: McpServer, db: Database.Database): 
 
   server.tool(
     'context_analyze',
-    'Analyze a project directory: git info, dependencies, file structure, languages',
+    'Auto-detect project structure, tech stack, git info, and languages from a directory. Use this to quickly understand an unfamiliar project.',
     {
       directory: z.string().describe('Absolute path to project directory'),
     },

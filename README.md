@@ -9,6 +9,8 @@ Cortex MCP gives any AI assistant (Claude, GPT, Gemini, Cursor, or any MCP-compa
 - **Persistent Memory** — Store, search, and manage memories with full-text search (FTS5)
 - **Project Context** — Key-value context per project, plus automatic project analysis
 - **Entity Tracking** — Track people, projects, organizations, tools, and concepts with relationship linking
+- **Task Scheduler** — Create recurring or one-time automated tasks
+- **Auto Context Injection** — Built-in CLI command to load context at session start
 - **Privacy First** — All data stored locally in `~/.cortex-mcp/cortex.db`
 - **Universal** — Works with any MCP-compatible AI client
 - **Zero Config** — Just install and connect
@@ -107,6 +109,50 @@ Replace `"command": "cortex-mcp"` with:
 | `context_get` | Get context for a project | `project`, `key` (optional) |
 | `context_analyze` | Analyze a project directory | `directory` |
 
+### Scheduler Tools (6)
+
+| Tool | Description | Key Params |
+|------|-------------|------------|
+| `scheduler_create` | Schedule a task | `name`, `schedule`, `action`, `project` |
+| `scheduler_list` | List scheduled tasks | `project`, `enabled` |
+| `scheduler_get` | Get task details | `id` |
+| `scheduler_update` | Modify a task | `id`, `schedule`, `enabled` |
+| `scheduler_delete` | Remove a task | `id` |
+| `scheduler_check_due` | Get tasks due to run | — |
+
+**Schedule formats:** `"once"`, `"every 5m"`, `"every 1h"`, `"every 1d"`
+
+## Auto Context Injection
+
+Cortex can automatically inject project context at the start of every Claude Code session using hooks.
+
+### Setup
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cortex-mcp inject"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The `inject` command auto-detects the current project (via `package.json` name or directory name) and outputs relevant context, decisions, entities, and user preferences from cortex memory.
+
+Options:
+- `--project <name>` — Override auto-detected project name
+- `--db-path <path>` — Custom database path
+
 ## Usage Examples
 
 ### Storing a memory
@@ -175,7 +221,7 @@ rm ~/.cortex-mcp/cortex.db
 ## Development
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/cortex-mcp.git
+git clone https://github.com/Resolut1onEDL/cortex-mcp.git
 cd cortex-mcp
 npm install
 npm run dev        # Watch mode with tsx
@@ -186,10 +232,11 @@ npm run typecheck  # Type check without emitting
 
 ## Roadmap
 
-- [ ] **v0.2** — Task automation (cron scheduling)
-- [ ] **v0.2** — StreamableHTTP transport for remote access
+- [x] **v0.1** — Memory, entities, context, project analysis
+- [x] **v0.2** — Task scheduler, auto context injection, improved tool descriptions
+- [ ] **v0.3** — StreamableHTTP transport for ChatGPT/Gemini access
 - [ ] **v0.3** — Web dashboard for browsing memories
-- [ ] **v0.3** — Import/export functionality
+- [ ] **v0.4** — Import/export functionality
 - [ ] **v0.4** — Multi-user support with authentication
 
 ## License

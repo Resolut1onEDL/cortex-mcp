@@ -37,6 +37,22 @@ export interface ProjectContextRow {
   updated_at: string;
 }
 
+export interface ScheduledTaskRow {
+  id: string;
+  name: string;
+  description: string;
+  schedule: string;
+  action: string; // JSON
+  project: string;
+  enabled: number;
+  last_run_at: string | null;
+  next_run_at: string | null;
+  run_count: number;
+  last_result: string | null; // JSON
+  created_at: string;
+  updated_at: string;
+}
+
 export type MemoryType = 'note' | 'feedback' | 'project' | 'reference' | 'decision' | 'snippet';
 export type EntityType = 'person' | 'project' | 'organization' | 'tool' | 'concept';
 export type ContentType = 'text' | 'json' | 'markdown';

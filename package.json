@@ -44,7 +44,16 @@
     "gpt",
     "llm"
   ],
+  "author": "Resolut1onEDL",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Resolut1onEDL/cortex-mcp.git"
+  },
+  "homepage": "https://github.com/Resolut1onEDL/cortex-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/Resolut1onEDL/cortex-mcp/issues"
+  },
   "engines": {
     "node": ">=18.0.0"
   }
