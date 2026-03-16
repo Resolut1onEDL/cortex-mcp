@@ -132,6 +132,30 @@ export class EntityService {
     return row;
   }
 
+  update(params: {
+    id: string;
+    name?: string;
+    type?: EntityType;
+    description?: string;
+    properties?: Record<string, string>;
+  }): EntityRow | undefined {
+    const existing = this.db.prepare('SELECT * FROM entities WHERE id = ?').get(params.id) as EntityRow | undefined;
+    if (!existing) return undefined;
+
+    const name = params.name ?? existing.name;
+    const type = params.type ?? existing.type;
+    const description = params.description ?? existing.description;
+    const properties = params.properties ? JSON.stringify(params.properties) : existing.properties;
+
+    this.db.prepare(`
+      UPDATE entities
+      SET name = ?, type = ?, description = ?, properties = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).run(name, type, description, properties, params.id);
+
+    return this.db.prepare('SELECT * FROM entities WHERE id = ?').get(params.id) as EntityRow;
+  }
+
   getTimeline(entityId: string, limit: number = 50): EntityTimelineRow[] {
     return this.db.prepare(
       'SELECT * FROM entity_timeline WHERE entity_id = ? ORDER BY event_date DESC LIMIT ?'

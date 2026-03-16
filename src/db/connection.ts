@@ -5,6 +5,7 @@ import { homedir } from 'os';
 import { up as migration001 } from './migrations/001-init.js';
 import { up as migration002 } from './migrations/002-scheduler.js';
 import { up as migration003 } from './migrations/003-intentions-states-sessions.js';
+import { up as migration004 } from './migrations/004-memory-archive.js';
 
 let db: Database.Database | null = null;
 
@@ -47,6 +48,7 @@ function runMigrations(database: Database.Database): void {
     { id: 1, name: '001-init', fn: migration001 },
     { id: 2, name: '002-scheduler', fn: migration002 },
     { id: 3, name: '003-intentions-states-sessions', fn: migration003 },
+    { id: 4, name: '004-memory-archive', fn: migration004 },
   ];
 
   const applied = new Set(

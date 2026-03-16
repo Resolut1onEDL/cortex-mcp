@@ -125,6 +125,13 @@ export class SchedulerService {
     `).run(nextRun, JSON.stringify(result), enabled, id);
   }
 
+  setNextRun(id: string, isoDate: string): void {
+    const formatted = isoDate.replace('T', ' ').slice(0, 19);
+    this.db.prepare(
+      "UPDATE scheduled_tasks SET next_run_at = ?, updated_at = datetime('now') WHERE id = ?"
+    ).run(formatted, id);
+  }
+
   private calculateNextRun(schedule: string): string | null {
     if (schedule === 'once') return new Date().toISOString().replace('T', ' ').slice(0, 19);
 

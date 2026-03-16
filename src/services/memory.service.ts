@@ -14,13 +14,14 @@ export class MemoryService {
   }): MemoryRow {
     const id = generateId('mem');
     const now = new Date().toISOString();
-    const row = {
+    const row: MemoryRow = {
       id,
       content: params.content,
       type: params.type || 'note',
       tags: JSON.stringify(params.tags || []),
       project: params.project || 'global',
       metadata: JSON.stringify(params.metadata || {}),
+      archived_at: null,
       created_at: now,
       updated_at: now,
     };
@@ -39,6 +40,7 @@ export class MemoryService {
     type?: MemoryType;
     tags?: string[];
     limit?: number;
+    include_archived?: boolean;
   }): MemoryRow[] {
     let sql = `
       SELECT m.*, bm25(memories_fts) as rank
@@ -47,6 +49,10 @@ export class MemoryService {
       WHERE memories_fts MATCH ?
     `;
     const bindings: unknown[] = [params.query];
+
+    if (!params.include_archived) {
+      sql += ' AND m.archived_at IS NULL';
+    }
 
     if (params.project) {
       sql += ' AND m.project = ?';
@@ -77,9 +83,14 @@ export class MemoryService {
     type?: MemoryType;
     limit?: number;
     offset?: number;
+    include_archived?: boolean;
   }): MemoryRow[] {
     let sql = 'SELECT * FROM memories WHERE 1=1';
     const bindings: unknown[] = [];
+
+    if (!params.include_archived) {
+      sql += ' AND archived_at IS NULL';
+    }
 
     if (params.project) {
       sql += ' AND project = ?';
@@ -132,5 +143,93 @@ export class MemoryService {
   delete(id: string): boolean {
     const result = this.db.prepare('DELETE FROM memories WHERE id = ?').run(id);
     return result.changes > 0;
+  }
+
+  archive(params: {
+    older_than_days?: number;
+    ids?: string[];
+    project?: string;
+  }): { archived_count: number; archived_ids: string[] } {
+    const ids: string[] = [];
+
+    if (params.ids && params.ids.length > 0) {
+      // Archive specific memories
+      for (const id of params.ids) {
+        const result = this.db.prepare(
+          "UPDATE memories SET archived_at = datetime('now'), updated_at = datetime('now') WHERE id = ? AND archived_at IS NULL"
+        ).run(id);
+        if (result.changes > 0) ids.push(id);
+      }
+    } else if (params.older_than_days) {
+      // Archive memories older than N days
+      let sql = `
+        UPDATE memories SET archived_at = datetime('now'), updated_at = datetime('now')
+        WHERE archived_at IS NULL
+        AND updated_at < datetime('now', ?)
+      `;
+      const bindings: unknown[] = [`-${params.older_than_days} days`];
+
+      if (params.project) {
+        sql += ' AND project = ?';
+        bindings.push(params.project);
+      }
+
+      // Get IDs first
+      let selectSql = `
+        SELECT id FROM memories
+        WHERE archived_at IS NULL
+        AND updated_at < datetime('now', ?)
+      `;
+      const selectBindings: unknown[] = [`-${params.older_than_days} days`];
+      if (params.project) {
+        selectSql += ' AND project = ?';
+        selectBindings.push(params.project);
+      }
+
+      const rows = this.db.prepare(selectSql).all(...selectBindings) as Array<{ id: string }>;
+      ids.push(...rows.map(r => r.id));
+
+      this.db.prepare(sql).run(...bindings);
+    }
+
+    return { archived_count: ids.length, archived_ids: ids };
+  }
+
+  unarchive(id: string): MemoryRow | undefined {
+    const result = this.db.prepare(
+      "UPDATE memories SET archived_at = NULL, updated_at = datetime('now') WHERE id = ?"
+    ).run(id);
+    if (result.changes === 0) return undefined;
+    return this.get(id);
+  }
+
+  findDuplicates(content: string, project?: string, threshold?: number): MemoryRow[] {
+    // Use FTS5 to find similar content
+    try {
+      // Extract key words (3+ chars) for matching
+      const words = content.split(/\s+/).filter(w => w.length >= 3).slice(0, 10);
+      if (words.length === 0) return [];
+
+      const query = words.join(' OR ');
+      let sql = `
+        SELECT m.*, bm25(memories_fts) as rank
+        FROM memories m
+        JOIN memories_fts ON memories_fts.rowid = m.rowid
+        WHERE memories_fts MATCH ? AND m.archived_at IS NULL
+      `;
+      const bindings: unknown[] = [query];
+
+      if (project) {
+        sql += ' AND m.project = ?';
+        bindings.push(project);
+      }
+
+      sql += ' ORDER BY rank LIMIT ?';
+      bindings.push(threshold || 5);
+
+      return this.db.prepare(sql).all(...bindings) as MemoryRow[];
+    } catch {
+      return [];
+    }
   }
 }

@@ -78,6 +78,23 @@ export function registerEntityTools(server: McpServer, db: Database.Database): v
   );
 
   server.tool(
+    'entity_update',
+    'Update an existing entity — change its name, description, type, or properties. Use when entity details evolve over time (e.g., person changes role, project changes phase).',
+    {
+      id: z.string().describe('Entity ID to update'),
+      name: z.string().optional().describe('New name'),
+      type: z.enum(ENTITY_TYPES).optional().describe('New type'),
+      description: z.string().optional().describe('New description'),
+      properties: z.record(z.string(), z.string()).optional().describe('New properties (replaces existing)'),
+    },
+    async (params) => {
+      const entity = service.update(params);
+      if (!entity) return textContent(`Entity not found: ${params.id}`);
+      return jsonContent(entity);
+    }
+  );
+
+  server.tool(
     'entity_timeline',
     'Add a chronological event to an entity — "TimeHUB: founded 2024-01", "revenue drop 2026-01", "restructuring discussion 2026-03". Builds a living history for any entity.',
     {

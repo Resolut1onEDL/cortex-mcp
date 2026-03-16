@@ -9,20 +9,29 @@ export function registerSchedulerTools(server: McpServer, db: Database.Database)
 
   server.tool(
     'scheduler_create',
-    'Schedule a recurring or one-time task — reminders, periodic cleanup, automated checks. Use "once" for one-time tasks, "every 5m/1h/1d" for intervals.',
+    'Schedule a reminder or recurring task. The cortex daemon (cortex-mcp daemon start) delivers notifications via macOS banners and optionally Telegram. Use "once" for one-time reminders, "every 5m/1h/1d" for recurring tasks. For reminders, set action type to "reminder" with params.message.',
     {
       name: z.string().describe('Short task name'),
       description: z.string().optional().describe('What this task does and why'),
       schedule: z.string().describe('Schedule: "once", "every 5m", "every 1h", "every 1d"'),
       action: z.object({
-        type: z.string().describe('Action type: "memory_cleanup", "context_refresh", "reminder", "custom"'),
-        params: z.record(z.string(), z.unknown()).optional().describe('Action parameters'),
+        type: z.string().describe('Action type: "reminder", "memory_cleanup", "context_refresh", "custom"'),
+        params: z.record(z.string(), z.unknown()).optional().describe('Action parameters (for reminder: { message: "text" })'),
       }).describe('What to execute when the task runs'),
+      run_at: z.string().optional().describe('Specific time to run (ISO 8601, e.g. "2026-03-17T15:00:00"). Overrides schedule for first run.'),
       project: z.string().default('global').describe('Project scope'),
       enabled: z.boolean().default(true).describe('Whether the task is active'),
     },
     async (params) => {
-      const task = service.create(params);
+      const { run_at, ...createParams } = params;
+      const task = service.create(createParams);
+
+      // Override next_run_at if run_at is provided
+      if (run_at) {
+        service.setNextRun(task.id, run_at);
+        return jsonContent(service.get(task.id));
+      }
+
       return jsonContent(task);
     }
   );
@@ -91,7 +100,7 @@ export function registerSchedulerTools(server: McpServer, db: Database.Database)
 
   server.tool(
     'scheduler_check_due',
-    'Check for tasks that are due to run now. Returns all tasks whose next_run_at has passed.',
+    'Check for tasks that are due to run now. The daemon calls this automatically, but you can also call it manually to see what is pending.',
     {},
     async () => {
       const due = service.getDueTasks();

@@ -108,4 +108,35 @@ export function registerMemoryTools(server: McpServer, db: Database.Database): v
       return jsonContent({ success: true, deleted_id: id });
     }
   );
+
+  server.tool(
+    'memory_archive',
+    'Archive old or low-value memories instead of deleting them. Archived memories are excluded from search/list by default but can still be accessed. Use to keep the active memory pool clean and relevant.',
+    {
+      older_than_days: z.number().optional().describe('Archive all memories not updated in N days'),
+      ids: z.array(z.string()).optional().describe('Archive specific memory IDs'),
+      project: z.string().optional().describe('Only archive memories from this project (used with older_than_days)'),
+    },
+    async (params) => {
+      if (!params.older_than_days && (!params.ids || params.ids.length === 0)) {
+        return textContent('Provide either older_than_days or ids to archive');
+      }
+      const result = service.archive(params);
+      return jsonContent(result);
+    }
+  );
+
+  server.tool(
+    'memory_find_duplicates',
+    'Check if similar memories already exist before storing a new one. Returns potential duplicates based on content similarity. Use this to prevent memory bloat.',
+    {
+      content: z.string().describe('Content to check for duplicates'),
+      project: z.string().optional().describe('Project scope to check in'),
+      limit: z.number().default(5).describe('Max duplicates to return'),
+    },
+    async (params) => {
+      const duplicates = service.findDuplicates(params.content, params.project, params.limit);
+      return jsonContent({ count: duplicates.length, potential_duplicates: duplicates });
+    }
+  );
 }

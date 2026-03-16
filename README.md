@@ -1,14 +1,17 @@
 # Cortex MCP
 
-> Universal AI memory, context, and entity server using the Model Context Protocol
+> Universal AI memory and cognition server — memory, entities, context, scheduling, intentions, and session management via MCP
 
-Cortex MCP gives any AI assistant (Claude, GPT, Gemini, Cursor, or any MCP-compatible client) a **persistent brain** — memories that survive between sessions, project context awareness, and entity relationship tracking. All data stays local on your machine in a SQLite database.
+Cortex MCP gives any AI assistant (Claude, GPT, Gemini, Cursor, or any MCP-compatible client) a **persistent brain** — memories that survive between sessions, project context awareness, entity relationship tracking, intention tracking for open loops, structured project state, and seamless session handoffs. All data stays local on your machine in a SQLite database.
 
 ## Features
 
 - **Persistent Memory** — Store, search, and manage memories with full-text search (FTS5)
 - **Project Context** — Key-value context per project, plus automatic project analysis
-- **Entity Tracking** — Track people, projects, organizations, tools, and concepts with relationship linking
+- **Entity Knowledge Graph** — Track people, projects, organizations, tools, and concepts with relationships, timelines, and linked memories
+- **Intention Tracking** — Track open loops, pending decisions, and goals with automatic trigger conditions (keyword, date, time elapsed)
+- **Project State** — Structured project phases, milestones, blockers, and focus areas with history snapshots
+- **Session Handoff** — Start/end sessions with automatic briefings, handoff notes, and continuity between conversations
 - **Task Scheduler** — Create recurring or one-time automated tasks
 - **Auto Context Injection** — Built-in CLI command to load context at session start
 - **Privacy First** — All data stored locally in `~/.cortex-mcp/cortex.db`
@@ -91,13 +94,16 @@ Replace `"command": "cortex-mcp"` with:
 
 **Memory types:** `note`, `feedback`, `project`, `reference`, `decision`, `snippet`
 
-### Entity Tools (3)
+### Entity Tools (6)
 
 | Tool | Description | Key Params |
 |------|-------------|------------|
 | `entity_store` | Create a new entity | `name`, `type`, `description`, `properties` |
 | `entity_search` | Search entities by name/description | `query`, `type`, `project` |
+| `entity_get_full` | Get complete entity picture (properties, memories, relationships, timeline) | `entity_id` |
 | `entity_link_memory` | Link an entity to a memory | `entity_id`, `memory_id`, `relation` |
+| `entity_link_entity` | Create typed relationship between entities | `source_entity_id`, `target_entity_id`, `relation` |
+| `entity_timeline` | Add chronological event to an entity | `entity_id`, `event`, `event_date` |
 
 **Entity types:** `person`, `project`, `organization`, `tool`, `concept`
 
@@ -121,6 +127,33 @@ Replace `"command": "cortex-mcp"` with:
 | `scheduler_check_due` | Get tasks due to run | — |
 
 **Schedule formats:** `"once"`, `"every 5m"`, `"every 1h"`, `"every 1d"`
+
+### Intention Tools (4)
+
+| Tool | Description | Key Params |
+|------|-------------|------------|
+| `intention_create` | Track an open loop or pending decision | `title`, `priority`, `trigger_conditions`, `project` |
+| `intention_update` | Update status, resolve, or add triggers | `id`, `status`, `resolve_reason` |
+| `intention_list` | List intentions by status/project/priority | `status`, `project`, `priority` |
+| `intention_check_triggers` | Check which intentions have fired triggers | — |
+
+**Statuses:** `open`, `waiting`, `blocked`, `resolved`, `abandoned`
+**Trigger types:** `keyword`, `date`, `time_elapsed`, `entity_update`, `custom`
+
+### Project State Tools (3)
+
+| Tool | Description | Key Params |
+|------|-------------|------------|
+| `project_state_set` | Set/update project phase, milestones, blockers | `project`, `phase`, `milestones`, `blockers` |
+| `project_state_get` | Get current project state | `project` |
+| `project_state_history` | View project evolution over time | `project`, `limit` |
+
+### Session Tools (2)
+
+| Tool | Description | Key Params |
+|------|-------------|------------|
+| `session_start` | Begin session with full briefing (triggered intentions, states, handoff notes) | `project` |
+| `session_end` | Close session with summary and handoff notes for next time | `id`, `summary`, `next_session_notes` |
 
 ## Auto Context Injection
 
@@ -185,6 +218,18 @@ The AI will call `context_set` to store the tech stack for the current project.
 
 The AI will call `context_analyze` to get git info, dependencies, file structure, and detected languages.
 
+### Tracking open loops
+
+> "We still haven't decided on the auth provider — remind me if I don't resolve this within 2 weeks"
+
+The AI will call `intention_create` with a `time_elapsed` trigger set to `"14d"`.
+
+### Session handoff
+
+> "Let's wrap up for today"
+
+The AI will call `session_end` with a summary and handoff notes, so the next session starts with full context.
+
 ## Configuration
 
 | Flag | Description | Default |
@@ -234,10 +279,11 @@ npm run typecheck  # Type check without emitting
 
 - [x] **v0.1** — Memory, entities, context, project analysis
 - [x] **v0.2** — Task scheduler, auto context injection, improved tool descriptions
-- [ ] **v0.3** — StreamableHTTP transport for ChatGPT/Gemini access
-- [ ] **v0.3** — Web dashboard for browsing memories
-- [ ] **v0.4** — Import/export functionality
-- [ ] **v0.4** — Multi-user support with authentication
+- [x] **v0.3** — Intention tracking, project state management, session handoff, enhanced entity graph (relationships, timelines)
+- [ ] **v0.4** — StreamableHTTP transport for ChatGPT/Gemini access
+- [ ] **v0.4** — Web dashboard for browsing memories
+- [ ] **v0.5** — Import/export functionality
+- [ ] **v0.5** — Multi-user support with authentication
 
 ## License
 

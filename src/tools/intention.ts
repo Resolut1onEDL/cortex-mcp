@@ -59,6 +59,19 @@ export function registerIntentionTools(server: McpServer, db: Database.Database)
   );
 
   server.tool(
+    'intention_get',
+    'Get full details of a specific intention by ID — its triggers, related entities, and memories.',
+    {
+      id: z.string().describe('Intention ID'),
+    },
+    async ({ id }) => {
+      const intention = service.getFull(id);
+      if (!intention) return textContent(`Intention not found: ${id}`);
+      return jsonContent(intention);
+    }
+  );
+
+  server.tool(
     'intention_list',
     'List all tracked intentions — open loops, pending decisions, blocked items. Filter by status, project, or priority. Use at session start to see what needs attention.',
     {

@@ -8,5 +8,7 @@ dist/
 *.db-shm
 .env
 .env.*
+.dev.vars
+.wrangler/
 coverage/
 .vitest/
